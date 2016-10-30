@@ -1,3 +1,6 @@
+##
+# PowerDNS Zone
+#
 module Pdns::Dns
   class Zone
 
@@ -13,9 +16,7 @@ module Pdns::Dns
     def initialize(client, id, data = {})
       @client = client
       if self.id
-        if self.id.strip.split('').last != '.'
-          self.id = "#{self.id}."
-        end
+        self.id = "#{self.id}." if self.id.strip.split('').last != '.'
       else
         self.id = nil
         self.name = nil
