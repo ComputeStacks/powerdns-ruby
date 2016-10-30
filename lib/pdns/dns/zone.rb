@@ -52,6 +52,7 @@ module Pdns::Dns
 
     def update!
       update_data = {'rrsets' => []}
+      current_records = ungrouped_records
       # Load /current/ data to compare
       existing_data = @client.exec!('get', "zones/#{self.id}")
       existing_data['rrsets'].each do |rset|
@@ -62,7 +63,7 @@ module Pdns::Dns
           'changetype' => 'REPLACE',
           'records' => []
         }
-        self.records.each do |i|
+        current_records.each do |i|
           if i.type == rset['type'] && i.name == rset['name']
             update_record['ttl'] = i.ttl
             update_record['records'] << {'content' => i.raw_value, 'disabled' => false}
@@ -80,7 +81,7 @@ module Pdns::Dns
       end # End existing_data['rrsets'].each
       # Look for new record sets
       new_records = []
-      self.records.each do |i|
+      current_records.each do |i|
         is_new = true
         update_data['rrsets'].each do |ii|
           if ii['name'] == i.name && ii['type'] == i.type
@@ -97,7 +98,7 @@ module Pdns::Dns
           'changetype' => 'REPLACE',
           'records' => []
         }
-        self.records.each do |i|
+        current_records.each do |i|
           if i.type == type && i.name == record
             update_record['ttl'] = i.ttl
             update_record['records'] << {'content' => i.raw_value, 'disabled' => false}
@@ -151,6 +152,16 @@ module Pdns::Dns
 
     private
 
+    # Convert 'process_records' to just an array of records
+    def ungrouped_records
+      val = []
+      self.records.each_with_index do |(i,v),k|
+        val << v
+      end
+      val.flatten!
+    end
+
+    # Take records and place them into groups for easy rendering client side.
     def process_records!(data)
       records = {
         'SOA' => [],
