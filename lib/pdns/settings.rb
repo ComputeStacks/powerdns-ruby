@@ -16,6 +16,13 @@ module Pdns
 
     class << self
 
+      def host_settings(client = nil)
+        {
+          'dns' => true,
+          'auth_type' => 'master' # Master account or user account.
+        }
+      end
+
       # List available features for each Module.
       def available_actions
         {
