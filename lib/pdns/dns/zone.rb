@@ -39,20 +39,7 @@ module Pdns::Dns
 
     def load!(data)
       data = data.empty? ? @client.exec!('get', "zones/#{self.id}") : data
-      data['rrsets'].each do |i|
-        type = i['type']
-        ttl = i['ttl']
-        name = i['name']
-        i['records'].each do |ii|
-          record_data = {
-            'name' => name,
-            'type' => type,
-            'ttl' => ttl,
-            'content' => ii['content']
-          }
-          self.records << Pdns::Dns::ZoneRecord.new(nil, nil, nil, record_data)
-        end
-      end
+      self.records = process_records!(data)
     end
 
     def zone
@@ -160,6 +147,37 @@ module Pdns::Dns
         zones
       end
 
+    end
+
+    private
+
+    def process_records!(data)
+      records = {
+        'SOA' => [],
+        'A' => [],
+        'AAAA' => [],
+        'MX' => [],
+        'CNAME' => [],
+        'TXT' => [],
+        'NS' => [],
+        'SRV' => []
+      }
+      data['rrsets'].each do |i|
+        type = i['type']
+        ttl = i['ttl']
+        name = i['name']
+        i['records'].each do |ii|
+          record_data = {
+            'name' => name,
+            'type' => type,
+            'ttl' => ttl,
+            'content' => ii['content']
+          }
+          records[type] = [] if records[type].nil?
+          records[type] << Pdns::Dns::ZoneRecord.new(nil, nil, nil, record_data)
+        end
+      end
+      self.records = records
     end
 
   end
