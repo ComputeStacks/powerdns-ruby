@@ -124,7 +124,7 @@ module Pdns::Dns
       result = @client.exec!('post', 'zones', data)
       self.id = result['id']
       self.load!(result)
-      true
+      self
     end
 
     def destroy
