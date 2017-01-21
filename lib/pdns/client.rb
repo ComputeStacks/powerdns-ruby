@@ -13,13 +13,18 @@ module Pdns
       self.api_version = version
     end
 
-    # TODO: Attempt to discover the API version, as this is how we determine if the API is availble.
     def version
-      1
+      begin
+        val = exec!('get', Pdns.config[:server])['version']
+        BigDecimal.new(val).to_f
+      rescue
+        0
+      end
     end
 
     def exec!(http_method, path, data = {})
       basic_auth = {username: self.auth.username, password: self.auth.password}
+      path = "#{Pdns.config[:server]}/#{path}" unless path.include?(Pdns.config[:server])
       url_base = "#{self.endpoint}/#{path}"
       rsp_headers = { 'X-API-Key' => self.auth.api_key, 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
       opts = {:basic_auth => basic_auth, :timeout => 40, :headers => rsp_headers, verify: false}

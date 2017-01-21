@@ -47,7 +47,13 @@ module Pdns::Dns
     end
 
     def save
-      self.id.nil? ? create! : update!
+      begin
+        self.id.nil? ? create! : update!
+      rescue => e
+        e.to_s
+      else
+        self
+      end
     end
 
     def update!
@@ -125,6 +131,19 @@ module Pdns::Dns
       self.id = result['id']
       self.load!(result)
       self
+      ##
+      # Possible use-case for the future, but right now we're useing `allow-axfr-ips` in the master config.
+      #
+      # Set MetaData to allow AXFR to Slaves
+      # https://doc.powerdns.com/md/httpapi/api_spec/#zone-metadata
+      # if Pdns.config[:zone_type] == 'Master' && @client.api_version > 4.0 # Currently expected to be supported in v4.1x
+      #   metadata = {
+      #     'type' => "Metadata",
+      #     'kind' => "ALLOW-AXFR-FROM",
+      #     'metadata' => ["AUTO-NS"]
+      #   }
+      #   @client.exec!('post', "zones/#{self.id}/metadata", metadata)
+      # end
     end
 
     def destroy

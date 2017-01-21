@@ -18,7 +18,8 @@ module Pdns
   @config = {
               zone_type: 'Native',
               masters: [],
-              nameservers: ['ns1.example.com.']
+              nameservers: ['ns1.example.com.'],
+              server: 'localhost'
             }
 
   @valid_config_keys = @config.keys
