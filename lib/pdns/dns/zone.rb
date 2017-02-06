@@ -39,7 +39,7 @@ module Pdns::Dns
 
     def load!(data)
       data = data.empty? ? @client.exec!('get', "zones/#{self.id}") : data
-      self.records = process_records!(data)
+      self.records = process_records!(data) unless data['rrsets'].nil?
     end
 
     def zone
