@@ -51,26 +51,43 @@ module Pdns::Dns
     def sec_params
       return nil unless self.dnssec
       response = @client.exec!('get', "zones/#{self.id}/cryptokeys")
-      data = response.first
-      return nil unless data['active']
-      key_params = data['ds'].first.split(' ')
-      sha256_key = nil
-      gost_key = nil
-      data['ds'].each do |i|
-        p = i.split(' ')
-        if p[2] == '2'
-          sha256_key = p[3]
-        elsif p[2] == '3'
-          gost_key = p[3]
+      result = []
+      response.each do |ds|
+        keys = []
+        ds['ds'].each do |i|
+          k = i.split(' ')
+          dtype = case k[2]
+            when 1
+              'sha1'
+            when 2
+              'sha256'
+            when 3
+              'gost r 34.11-94'
+            when 4
+              'sha386'
+            else
+              'unknown'
+          end
+          keys << {
+            'tag' => k[0],
+            'algo' => k[1],
+            'digest_type' => k[2],
+            'digest_type_human' => dtype,
+            'digest' => k[3]
+          }
         end
+        result << {
+          'id' => ds['id'],
+          'tag' => keys.first['tag'],
+          'algo' => keys.first['algo'],
+          'active' => ds['active'],
+          'flags' => ds['flags'],
+          'keytype' => ds['keytype'],
+          'type' => ds['type'],
+          'keys' => keys
+        }
       end
-      return nil if sha256_key.nil?
-      {
-        'tag' => key_params[0],
-        'alg' => key_params[1],
-        'sha256' => sha256_key,
-        'gost' => gost_key
-      }
+      result
     end
 
     def save
