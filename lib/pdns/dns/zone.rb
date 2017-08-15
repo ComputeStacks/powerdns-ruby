@@ -55,18 +55,21 @@ module Pdns::Dns
       return nil unless data['active']
       key_params = data['ds'].first.split(' ')
       sha256_key = nil
+      gost_key = nil
       data['ds'].each do |i|
         p = i.split(' ')
-        if p[2] == '3'
+        if p[2] == '2'
           sha256_key = p[3]
-          break
+        elsif p[2] == '3'
+          gost_key = p[3]
         end
       end
       return nil if sha256_key.nil?
       {
         'tag' => key_params[0],
-        'alg' => 3,
-        'sha256' => sha256_key
+        'alg' => key_params[1],
+        'sha256' => sha256_key,
+        'gost' => gost_key
       }
     end
 
