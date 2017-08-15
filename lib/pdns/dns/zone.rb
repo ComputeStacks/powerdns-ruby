@@ -48,7 +48,7 @@ module Pdns::Dns
     end
 
     # View DNSec Params
-    def dnssec
+    def sec_params
       return nil unless self.dnssec
       response = @client.exec!('get', "zones/#{self.id}/cryptokeys")
       data = response.first
