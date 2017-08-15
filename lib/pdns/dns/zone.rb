@@ -56,7 +56,7 @@ module Pdns::Dns
         keys = []
         ds['ds'].each do |i|
           k = i.split(' ')
-          dtype = case k[2]
+          dtype = case k[2].to_i
             when 1
               'sha1'
             when 2
