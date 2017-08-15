@@ -39,11 +39,35 @@ module Pdns::Dns
 
     def load!(data)
       data = data.empty? ? @client.exec!('get', "zones/#{self.id}") : data
+      self.dnssec = data['dnssec']
       self.records = process_records!(data) unless data['rrsets'].nil?
     end
 
     def zone
       # ?
+    end
+
+    # View DNSec Params
+    def dnssec
+      return nil unless self.dnssec
+      response = @client.exec!('get', "zones/#{self.id}/cryptokeys")
+      data = response.first
+      return nil unless data['active']
+      key_params = data['ds'].first.split(' ')
+      sha256_key = nil
+      data['ds'].each do |i|
+        p = i.split(' ')
+        if p[2] == '3'
+          sha256_key = p[3]
+          break
+        end
+      end
+      return nil if sha256_key.nil?
+      {
+        'tag' => key_params[0],
+        'alg' => 3,
+        'sha256' => sha256_key
+      }
     end
 
     def save
