@@ -47,6 +47,10 @@ module Pdns::Dns
       # ?
     end
 
+    def enable_dnssec!
+      # TODO. Waiting for PowerDNS 4.1 stable.
+    end
+
     # View DNSec Params
     def sec_params
       return nil unless self.dnssec
@@ -64,7 +68,7 @@ module Pdns::Dns
             when 3
               'gost r 34.11-94'
             when 4
-              'sha386'
+              'sha384'
             else
               'unknown'
           end
