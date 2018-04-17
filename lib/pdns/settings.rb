@@ -30,6 +30,29 @@ module Pdns
         }
       end
 
+      # Do you need a SOA email?
+      def require_email_on_create?
+        false
+      end
+
+      # Allow viewing all zones on the DNS server, including those not
+      # known to the application.
+      #
+      # This will also prevent adding zones that already exist on the DNS server.
+      def allow_unknown_zones?
+        true
+      end
+
+      # Allow listing all domains on a DNS server.
+      def allow_list_all?
+        true
+      end
+
+      # Support DNSSEC?
+      def supports_dnssec?
+        true
+      end
+
     end
   end
 end

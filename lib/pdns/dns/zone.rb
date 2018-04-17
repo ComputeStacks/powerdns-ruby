@@ -10,11 +10,16 @@ module Pdns::Dns
                   :dnssec,
                   :account_id,
                   :features,
+                  :soa_email,
+                  :axfr_ips,
+                  :errors,
                   :updated_at,
                   :created_at
 
     def initialize(client, id, data = {})
       @client = client
+      self.errors = []
+      self.axfr_ips = []
       if self.id
         self.id = "#{self.id}." if self.id.strip.split('').last != '.'
       else
@@ -38,14 +43,13 @@ module Pdns::Dns
     end
 
     def load!(data)
-      data = data.empty? ? @client.exec!('get', "zones/#{self.id}") : data
       self.dnssec = data['dnssec']
       self.records = process_records!(data) unless data['rrsets'].nil?
     end
 
-    def zone
-      # ?
-    end
+    # def zone
+    #   # ?
+    # end
 
     def enable_dnssec!
       # TODO. Waiting for PowerDNS 4.1 stable.
@@ -213,6 +217,12 @@ module Pdns::Dns
           zones << Pdns::Dns::Zone.new(client, zone['id'], zone)
         end
         zones
+      end
+
+      # TODO: Test!
+      def find(client, zone_name)
+        data = client.exec!('get', "zones/#{zone_name}")
+        Pdns::Dns::Zone.new(client, zone_name, data)
       end
 
     end
