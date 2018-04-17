@@ -20,6 +20,7 @@ module Pdns::Dns
       @client = client
       self.errors = []
       self.axfr_ips = []
+      self.records = default_records
       if self.id
         self.id = "#{self.id}." if self.id.strip.split('').last != '.'
       else
@@ -240,16 +241,7 @@ module Pdns::Dns
 
     # Take records and place them into groups for easy rendering client side.
     def process_records!(data)
-      records = {
-        'SOA' => [],
-        'A' => [],
-        'AAAA' => [],
-        'MX' => [],
-        'CNAME' => [],
-        'TXT' => [],
-        'NS' => [],
-        'SRV' => []
-      }
+      records = default_records
       data['rrsets'].each do |i|
         type = i['type']
         ttl = i['ttl']
@@ -266,6 +258,26 @@ module Pdns::Dns
         end
       end
       self.records = records
+    end
+
+    def default_records
+      {
+          'A' => [],
+          'AAAA' => [],
+          'CAA' => [],
+          'CNAME' => [],
+          'DS' => [],
+          'HINFO' => [],
+          'MX' => [],
+          'NAPTR' => [],
+          'NS' => [],
+          'PTR' => [],
+          'SRV' => [],
+          'SOA' => [],
+          'SSHFP' => [],
+          'TLSA' => [],
+          'TXT' => []
+      }
     end
 
   end

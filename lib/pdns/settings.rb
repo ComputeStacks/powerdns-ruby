@@ -53,6 +53,11 @@ module Pdns
         true
       end
 
+      # Text field limit
+      def has_txt_limit?
+        false
+      end
+
     end
   end
 end
