@@ -29,7 +29,7 @@ module Pdns::Dns
       self.ttl = data['ttl'] if data['ttl']
       self.type = data['type']
       case self.type
-      when 'CNAME', 'NS'
+      when 'CNAME', 'NS', 'PTR'
         self.hostname = data['content']
       when 'A', 'AAAA'
         self.ip = data['content']
@@ -50,7 +50,7 @@ module Pdns::Dns
     # Format record value specifically for PowerDNS.
     def raw_value
       case self.type
-      when 'CNAME', 'NS', 'NS'
+      when 'CNAME', 'NS', 'PTR'
         self.hostname
       when 'A', 'AAAA'
         self.ip
