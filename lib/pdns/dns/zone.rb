@@ -220,10 +220,11 @@ module Pdns::Dns
         zones
       end
 
-      # TODO: Test!
       def find(client, zone_name)
         data = client.exec!('get', "zones/#{zone_name}")
         Pdns::Dns::Zone.new(client, zone_name, data)
+      rescue Pdns::UnknownObject
+        nil
       end
 
     end
