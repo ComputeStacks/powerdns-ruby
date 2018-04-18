@@ -29,20 +29,16 @@ module Pdns::Dns
       self.ttl = data['ttl'] if data['ttl']
       self.type = data['type']
       case self.type
-      when 'CNAME', 'NS', 'PTR'
+      when 'CNAME', 'NS'
         self.hostname = data['content']
       when 'A', 'AAAA'
         self.ip = data['content']
       when 'MX'
         self.priority = data['content'].split(' ').first.to_i
         self.hostname = data['content'].split(' ').last.strip
-      when 'SOA'
-        self.value = data['content']
       when 'NS'
         self.hostname = data['content']
-      when 'TXT'
-        self.value = data['content']
-      else
+      else # TXT, SOA, PTR
         self.value = data['content']
       end
     end
@@ -50,13 +46,13 @@ module Pdns::Dns
     # Format record value specifically for PowerDNS.
     def raw_value
       case self.type
-      when 'CNAME', 'NS', 'PTR'
+      when 'CNAME', 'NS'
         self.hostname
       when 'A', 'AAAA'
         self.ip
       when 'MX'
         "#{self.priority} #{self.hostname}"
-      else
+      else # TXT, PTR
         self.value
       end
     end
