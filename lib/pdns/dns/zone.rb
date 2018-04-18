@@ -52,9 +52,7 @@ module Pdns::Dns
     #   # ?
     # end
 
-    def enable_dnssec!
-      # TODO. Waiting for PowerDNS 4.1 stable.
-    end
+    def enable_dnssec!; end
 
     # View DNSec Params
     def sec_params
@@ -100,12 +98,12 @@ module Pdns::Dns
     end
 
     def save
-      begin
-        self.id.nil? ? create! : update!
-      rescue => e
-        e.to_s
+      if self.id.nil?
+        create!
+        return find(@client, self.id) if self.errors.empty?
+        false # Because we failed to create it!
       else
-        self
+        update!
       end
     end
 
@@ -180,10 +178,8 @@ module Pdns::Dns
         'masters' => Pdns.config[:masters],
         'nameservers' => Pdns.config[:nameservers]
       }
-      result = @client.exec!('post', 'zones', data)
-      self.id = result['id']
-      self.load!(result)
-      self
+      @client.exec!('post', 'zones', data)
+      
       ##
       # Possible use-case for the future, but right now we're useing `allow-axfr-ips` in the master config.
       #
@@ -200,13 +196,12 @@ module Pdns::Dns
     end
 
     def destroy
-      begin
         @client.exec!('delete', "zones/#{self.id}")
-      rescue
-        false
-      else
-        true
-      end
+    rescue => e
+      self.errors << e.inspect.to_s
+      false
+    else
+      true
     end
 
     class << self
