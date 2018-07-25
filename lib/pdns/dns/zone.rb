@@ -171,6 +171,7 @@ module Pdns::Dns
     def create!
       if self.name.strip.split('').last != '.'
         self.name = "#{self.name}."
+        self.id = self.name
       end
       data = {
         'name' => self.name,
