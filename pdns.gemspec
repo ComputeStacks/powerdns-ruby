@@ -13,8 +13,8 @@ Gem::Specification.new do |spec|
   spec.description   = "PowerDNS Module for ComputeStacks"
   spec.homepage      = "https://wwww.computestacks.com"
 
-  spec.add_dependency 'json', "~> 1.8"
-  spec.add_dependency 'httparty', '>= 0.13.5'
+  spec.add_dependency 'json', "~> 2.1"
+  spec.add_dependency 'httparty', '>= 0.17.0'
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
@@ -23,6 +23,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency "bundler", "~> 1.13"
-  spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency "bundler", "~> 1.17"
+  spec.add_development_dependency "rake", ">= 12.0"
 end
