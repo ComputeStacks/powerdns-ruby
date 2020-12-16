@@ -1,20 +1,20 @@
 PATH
   remote: .
   specs:
-    pdns (1.1.0)
+    pdns (1.1.1)
       httparty (>= 0.17.0)
       json (~> 2.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    httparty (0.17.1)
+    httparty (0.18.1)
       mime-types (~> 3.0)
       multi_xml (>= 0.5.2)
-    json (2.2.0)
-    mime-types (3.3)
+    json (2.3.1)
+    mime-types (3.3.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2019.1009)
+    mime-types-data (3.2020.1104)
     multi_xml (0.6.0)
     rake (12.3.3)
 
@@ -27,4 +27,4 @@ DEPENDENCIES
   rake (~> 12.3)
 
 BUNDLED WITH
-   2.0.2
+   2.1.4
