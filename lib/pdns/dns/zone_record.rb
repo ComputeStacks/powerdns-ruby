@@ -52,6 +52,8 @@ module Pdns::Dns
         self.ip
       when 'MX'
         "#{self.priority} #{self.hostname}"
+      when 'TXT'
+        value[0] == "\"" ? value : %Q("#{value}")
       else # TXT, PTR
         self.value
       end
