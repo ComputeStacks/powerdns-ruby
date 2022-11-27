@@ -15,8 +15,7 @@ module Pdns
 
     def version
       begin
-        val = exec!('get', Pdns.config[:server])['version']
-        BigDecimal.new(val).to_f
+        exec!('get', Pdns.config[:server])['version']
       rescue
         0
       end
