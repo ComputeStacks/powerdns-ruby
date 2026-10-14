@@ -71,5 +71,5 @@ as a public API; the error classes in `lib/pdns/errors.rb` are part of it too.
 
 - Version lives in `lib/pdns/version.rb`.
 - The gem is pushed to GitHub Packages (`allowed_push_host` in the gemspec), not RubyGems.
-- The GitHub repo (`ComputeStacks/powerdns-ruby`) is mirrored to GitLab on every push by
-  `.github/workflows/mirror.yml`.
+- CI (`.github/workflows/test.yml`) runs `bundle exec rake` on every push and pull request,
+  with the Ruby version from `.tool-versions`.
