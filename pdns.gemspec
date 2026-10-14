@@ -13,8 +13,10 @@ Gem::Specification.new do |spec|
   spec.description   = "PowerDNS Module for ComputeStacks"
   spec.homepage      = "https://github.com/ComputeStacks/powerdns-ruby"
 
-  spec.add_dependency 'json', "~> 2.1"
-  spec.add_dependency 'httparty', '>= 0.17.0'
+  spec.required_ruby_version = '>= 3.4'
+
+  spec.add_dependency 'json', '~> 2.1'
+  spec.add_dependency 'httparty', '~> 0.23'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
@@ -31,7 +33,4 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
-
-  spec.add_development_dependency "bundler", "~> 2.0"
-  spec.add_development_dependency "rake", "~> 12.3"
 end

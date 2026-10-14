@@ -2,29 +2,46 @@ PATH
   remote: .
   specs:
     pdns (1.1.1)
-      httparty (>= 0.17.0)
+      httparty (~> 0.23)
       json (~> 2.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    httparty (0.18.1)
-      mime-types (~> 3.0)
+    addressable (2.9.0)
+      public_suffix (>= 2.0.2, < 8.0)
+    bigdecimal (4.1.3)
+    crack (1.0.1)
+      bigdecimal
+      rexml
+    csv (3.3.6)
+    hashdiff (1.2.1)
+    httparty (0.24.3)
+      csv
+      mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
-    json (2.3.1)
-    mime-types (3.3.1)
-      mime-types-data (~> 3.2015)
-    mime-types-data (3.2020.1104)
-    multi_xml (0.6.0)
-    rake (12.3.3)
+    json (2.21.2)
+    mini_mime (1.1.5)
+    minitest (5.27.0)
+    multi_xml (0.9.1)
+      bigdecimal (>= 3.1, < 5)
+    public_suffix (7.0.5)
+    rake (13.4.2)
+    rexml (3.4.4)
+    webmock (3.32.0)
+      addressable (>= 2.8.0)
+      crack (>= 0.3.2)
+      hashdiff (>= 0.4.0, < 2.0.0)
 
 PLATFORMS
   ruby
+  x86_64-linux
 
 DEPENDENCIES
-  bundler (~> 2.0)
+  minitest (~> 5.25)
   pdns!
-  rake (~> 12.3)
+  rake (~> 13.0)
+  webmock (~> 3.25)
 
 BUNDLED WITH
-   2.1.4
+   2.7.2
