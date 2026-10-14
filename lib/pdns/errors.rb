@@ -3,8 +3,8 @@ module Pdns
   class ActionRefused < RuntimeError; end
 
   class AuthenticationFailed < RuntimeError; end
-  class ConnectionFailed < RuntimeError; end
-  class ConnectionTimeout < RuntimeError; end
+  class ConnectionFailed < GeneralError; end
+  class ConnectionTimeout < GeneralError; end
 
   class MissingParameter < RuntimeError; end
   class InvalidParameter < RuntimeError; end
