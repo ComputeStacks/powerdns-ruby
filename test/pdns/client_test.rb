@@ -110,6 +110,18 @@ class ClientTest < Minitest::Test
     refute_secrets error.message
   end
 
+  def test_dropped_connection_raises_connection_failed
+    [EOFError, Errno::EPIPE, Net::HTTPBadResponse].each do |klass|
+      stub_request(:get, ZONES_URL).to_raise(klass)
+      assert_raises(Pdns::ConnectionFailed) { new_client.exec!("get", "zones/example.com.") }
+    end
+  end
+
+  def test_etimedout_raises_connection_timeout
+    stub_request(:get, ZONES_URL).to_raise(Errno::ETIMEDOUT)
+    assert_raises(Pdns::ConnectionTimeout) { new_client.exec!("get", "zones/example.com.") }
+  end
+
   def test_socket_error_raises_connection_failed
     stub_request(:get, ZONES_URL).to_raise(SocketError)
     error = assert_raises(Pdns::ConnectionFailed) { new_client.exec!("get", "zones/example.com.") }

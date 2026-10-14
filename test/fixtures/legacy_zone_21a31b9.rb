@@ -1,10 +1,12 @@
 # Generates legacy_zone_21a31b9.marshal: a Pdns::Dns::Zone as the controller stored it in
 # dns_zones.saved_state with the gem at 21a31b9 (client and credentials included, plus one
 # controller-appended record). Not run by the suite; kept so the fixture can be reproduced.
-# It must be run against lib/ as of 21a31b9:
+# It must be run against lib/ as of 21a31b9, passed in PDNS_LIB (bundler would otherwise put
+# this checkout's lib/ first):
 #
 #   git worktree add /tmp/pdns-21a31b9 21a31b9
-#   bundle exec ruby -I/tmp/pdns-21a31b9/lib test/fixtures/legacy_zone_21a31b9.rb
+#   PDNS_LIB=/tmp/pdns-21a31b9/lib bundle exec ruby test/fixtures/legacy_zone_21a31b9.rb
+$LOAD_PATH.unshift(ENV.fetch("PDNS_LIB"))
 require "pdns"
 require "webmock"
 include WebMock::API

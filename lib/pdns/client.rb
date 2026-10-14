@@ -10,13 +10,16 @@ module Pdns
       'delete' => :delete
     }.freeze
 
-    TIMEOUT_ERRORS = [Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout].freeze
+    TIMEOUT_ERRORS = [Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout, Errno::ETIMEDOUT].freeze
 
     CONNECTION_ERRORS = [
       Errno::ECONNREFUSED,
       Errno::ECONNRESET,
       Errno::EHOSTUNREACH,
       Errno::ENETUNREACH,
+      Errno::EPIPE,
+      IOError,
+      Net::HTTPBadResponse,
       SocketError,
       OpenSSL::SSL::SSLError
     ].freeze
