@@ -30,3 +30,27 @@ zone = Pdns::Dns::Zone.new(client, nil)
 zone.name = 'mydomain.net'
 zone.save
 ```
+
+The endpoint is the API's `/api/v1/servers` URL; the server id (`Pdns.config[:server]`, default
+`localhost`) is appended by the client, and an endpoint that already ends in it also works.
+
+#### Storing zones
+
+`Pdns::Dns::Zone` objects can be persisted with `Marshal.dump`. Clear the client first so no
+credentials are stored, and attach a fresh one after loading:
+
+```
+zone.client = nil
+blob = Marshal.dump(zone)
+
+zone = Marshal.load(blob)
+zone.client = client
+zone.save
+```
+
+#### Development
+
+```
+bundle install
+bundle exec rake   # run the test suite
+```

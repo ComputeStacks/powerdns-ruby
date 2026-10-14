@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pdns (1.1.1)
+    pdns (1.2.0)
       httparty (~> 0.23)
       json (~> 2.1)
 
