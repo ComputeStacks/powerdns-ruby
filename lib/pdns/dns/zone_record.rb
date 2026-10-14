@@ -17,7 +17,8 @@ module Pdns::Dns
                   :expire,
                   :email,
                   :ttl,
-                  :zone_id
+                  :zone_id,
+                  :disabled
 
     def initialize(client, id, zone_id, data = {})
       self.ttl = 3600
@@ -28,6 +29,7 @@ module Pdns::Dns
       self.name = data['name']
       self.ttl = data['ttl'] if data['ttl']
       self.type = data['type']
+      self.disabled = data['disabled']
       case self.type
       when 'CNAME', 'NS'
         self.hostname = data['content']
@@ -36,8 +38,6 @@ module Pdns::Dns
       when 'MX'
         self.priority = data['content'].split(' ').first.to_i
         self.hostname = data['content'].split(' ').last.strip
-      when 'NS'
-        self.hostname = data['content']
       else # TXT, SOA, PTR
         self.value = data['content']
       end

@@ -16,19 +16,18 @@ module Pdns::Dns
                   :updated_at,
                   :created_at
 
+    # Re-attach a client after Marshal.load (the controller stores zones without one).
+    attr_writer :client
+
+    MISSING_CLIENT_MESSAGE = 'zone has no client; set Zone#client= after Marshal.load'.freeze
+
     def initialize(client, id, data = {})
       @client = client
       self.errors = []
       self.axfr_ips = []
       self.records = default_records
-      if self.id
-        self.id = "#{self.id}." if self.id.strip.split('').last != '.'
-      else
-        self.id = nil
-        self.name = nil
-      end
       self.id = id
-      self.records = []
+      self.name = data['name'] if data['name']
       if data.empty?
         self.dnssec = false
         self.features = {}
@@ -57,11 +56,13 @@ module Pdns::Dns
     # View DNSec Params
     def sec_params
       return nil unless self.dnssec
+      require_client!
       response = @client.exec!('get', "zones/#{self.id}/cryptokeys")
       result = []
       response.each do |ds|
         keys = []
-        ds['ds'].each do |i|
+        # PowerDNS only returns 'ds' for KSK/CSK keys.
+        Array(ds['ds']).each do |i|
           k = i.split(' ')
           dtype = case k[2].to_i
             when 1
@@ -85,8 +86,8 @@ module Pdns::Dns
         end
         result << {
           'id' => ds['id'],
-          'tag' => keys.first['tag'],
-          'algo' => keys.first['algo'],
+          'tag' => keys.first&.fetch('tag'),
+          'algo' => keys.first&.fetch('algo'),
           'active' => ds['active'],
           'flags' => ds['flags'],
           'keytype' => ds['keytype'],
@@ -108,71 +109,59 @@ module Pdns::Dns
     end
 
     def update!
+      require_client!
       update_data = {'rrsets' => []}
       current_records = ungrouped_records
       # Load /current/ data to compare
       existing_data = @client.exec!('get', "zones/#{self.id}")
       existing_data['rrsets'].each do |rset|
-        update_record = {
-          'name' => rset['name'],
-          'type' => rset['type'],
-          'ttl' => rset['ttl'],
-          'changetype' => 'REPLACE',
-          'records' => []
-        }
-        current_records.each do |i|
-          if i.type == rset['type'] && i.name == rset['name']
-            update_record['ttl'] = i.ttl
-            update_record['records'] << {'content' => i.raw_value, 'disabled' => false}
-          end
-        end
-        if update_record['records'].empty?
+        local = current_records.select { |i| i.type == rset['type'] && i.name == rset['name'] }
+        if local.empty?
           update_data['rrsets'] << {
             'name' => rset['name'],
             'type' => rset['type'],
             'changetype' => 'DELETE'
           }
         else
-          update_data['rrsets'] << update_record
+          server_ttl = rset['ttl']
+          ttl = local.map { |i| coerce_ttl(i.ttl) }.find { |t| !t.nil? && t != server_ttl }
+          update_data['rrsets'] << {
+            'name' => rset['name'],
+            'type' => rset['type'],
+            'ttl' => ttl || coerce_ttl(server_ttl) || 3600,
+            'changetype' => 'REPLACE',
+            'records' => local.map { |i| record_payload(i, rset['records']) }
+          }
         end
       end # End existing_data['rrsets'].each
-      # Look for new record sets
+      # Look for new record sets (unique name/type pairs, first-seen order)
       new_records = []
       current_records.each do |i|
-        is_new = true
-        update_data['rrsets'].each do |ii|
-          if ii['name'] == i.name && ii['type'] == i.type
-            is_new = false
-          end
-        end
-        new_records << [i.name, i.type] if is_new
+        key = [i.name, i.type]
+        next if new_records.include?(key)
+        next if update_data['rrsets'].any? { |ii| ii['name'] == i.name && ii['type'] == i.type }
+        new_records << key
       end
       new_records.each do |record, type|
-        update_record = {
+        local = current_records.select { |i| i.type == type && i.name == record }
+        next if local.empty?
+        ttl = local.map { |i| coerce_ttl(i.ttl) }.compact.first
+        update_data['rrsets'] << {
           'name' => record,
           'type' => type,
-          'ttl' => 3600,
+          'ttl' => ttl || 3600,
           'changetype' => 'REPLACE',
-          'records' => []
+          'records' => local.map { |i| record_payload(i, nil) }
         }
-        current_records.each do |i|
-          if i.type == type && i.name == record
-            update_record['ttl'] = i.ttl
-            update_record['records'] << {'content' => i.raw_value, 'disabled' => false}
-          end
-        end
-        unless update_record['records'].empty?
-          update_data['rrsets'] << update_record
-        end
       end
       @client.exec!('put', "zones/#{self.id}", update_data)
     end
 
     def create!
-      if self.name.strip.split('').last != '.'
-        self.name = "#{self.name}."
-        self.id = self.name
-      end
+      require_client!
+      self.name = self.name.strip
+      self.name = "#{self.name}." unless self.name.end_with?('.')
+      self.id = self.name
       data = {
         'name' => self.name,
         'kind' => Pdns.config[:zone_type] == 'Native' ? 'Native' : 'Master',
@@ -197,7 +186,8 @@ module Pdns::Dns
     end
 
     def destroy
-        @client.exec!('delete', "zones/#{self.id}")
+      require_client!
+      @client.exec!('delete', "zones/#{self.id}")
     rescue => e
       self.errors << e.inspect.to_s
       false
@@ -227,13 +217,40 @@ module Pdns::Dns
 
     private
 
+    def require_client!
+      raise Pdns::MissingParameter, MISSING_CLIENT_MESSAGE if @client.nil?
+    end
+
     # Convert 'process_records' to just an array of records
     def ungrouped_records
-      val = []
-      self.records.each_with_index do |(i,v),k|
-        val << v
+      self.records.values.flatten
+    end
+
+    # Integer TTL from an Integer or a base-10 String; nil otherwise.
+    def coerce_ttl(ttl)
+      case ttl
+      when Integer
+        ttl
+      when String
+        str = ttl.strip
+        return nil if str.empty?
+        Integer(str, 10)
       end
-      val.flatten!
+    rescue ArgumentError
+      nil
+    end
+
+    # PowerDNS record payload. 'disabled' is always a boolean: the record's own value when set,
+    # otherwise that of the server record with identical content (old dumps and controller-built
+    # records have no @disabled), otherwise false.
+    def record_payload(record, server_records)
+      content = record.raw_value
+      disabled = record.disabled
+      if disabled.nil?
+        match = Array(server_records).find { |r| r['content'] == content }
+        disabled = match ? match['disabled'] : false
+      end
+      {'content' => content, 'disabled' => disabled == true}
     end
 
     # Take records and place them into groups for easy rendering client side.
@@ -248,7 +265,8 @@ module Pdns::Dns
             'name' => name,
             'type' => type,
             'ttl' => ttl,
-            'content' => ii['content']
+            'content' => ii['content'],
+            'disabled' => ii['disabled']
           }
           records[type] = [] if records[type].nil?
           records[type] << Pdns::Dns::ZoneRecord.new(nil, nil, nil, record_data)
