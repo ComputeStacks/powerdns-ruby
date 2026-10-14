@@ -21,4 +21,26 @@ module PdnsTestHelper
     stub_server_version
     Pdns::Client.new(ENDPOINT, Pdns::Auth.new(0, "admin", "webpass", "apikey"))
   end
+
+  # rrsets: [{ "name" =>, "type" =>, "ttl" =>, "records" => [{ "content" =>, "disabled" => }] }]
+  def zone_json(name, rrsets = [], extra = {})
+    { "id" => name, "name" => name, "kind" => "Native", "dnssec" => false, "rrsets" => rrsets }.merge(extra)
+  end
+
+  def stub_zone_get(name, body)
+    stub_request(:get, server_url("zones/#{name}"))
+      .to_return(status: 200, headers: JSON_HEADERS, body: body.to_json)
+  end
+
+  def stub_zone_patch(name)
+    stub_request(:patch, server_url("zones/#{name}")).to_return(status: 204)
+  end
+
+  # Parsed JSON body of the last request matching a stub.
+  def patch_body(stub)
+    request = WebMock::RequestRegistry.instance.requested_signatures.hash.keys
+      .select { |sig| stub.request_pattern.matches?(sig) }.last
+    refute_nil request, "expected a request matching #{stub.request_pattern}"
+    JSON.parse(request.body)
+  end
 end
